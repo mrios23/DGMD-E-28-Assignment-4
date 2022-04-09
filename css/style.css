@@ -42,6 +42,18 @@
     display:flex;
 }
 
+.match {
+    background-color: green;
+}
+
+.invalid {
+    background-color: gray;
+}
+
+.wrongSpot {
+    background-color: yellow;
+}
+
 .word:last-of-type{
     padding-bottom: 25px;
 }

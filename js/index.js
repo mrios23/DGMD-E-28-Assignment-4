@@ -1,22 +1,32 @@
 window.onload = () =>{
 
     var game = new Game();
+    game.generateRandomWord();
     game.createGameBoard();
 
 }
 
 class Letter{
     value;
+    status;
 
     constructor(value){
         this.value = value;
-        this.display = () => `<div class="letterBox">${this.value}</div>`;
+        this.display = () => `<div class="letterBox ${this.status}">${this.value}</div>`;
     }
 }
+/* API KEY */
+const options = {
+    method: 'GET',
+    headers: {
+        'X-RapidAPI-Host': 'wordle-creator-tools.p.rapidapi.com',
+        'X-RapidAPI-Key': 'c5c5487ec6mshfa9eea1774ea84fp1b6491jsn97d7ea39604c'
+    }
+};
 
 class Word{
     letters = [];
-    isValid = false;
+    isValid;
 
     constructor(letters){
         this.letters = letters;
@@ -40,26 +50,13 @@ class Word{
 
     /*Check if a word is a real dictionary word 
     (Takes a query parameter called word which denotes the word to check) */    
-    async checkIsValid(attempts){
-
-        const options = {
-            method: 'GET',
-            headers: {
-                'X-RapidAPI-Host': 'wordle-creator-tools.p.rapidapi.com',
-                'X-RapidAPI-Key': 'c5c5487ec6mshfa9eea1774ea84fp1b6491jsn97d7ea39604c'
-            }
-        };
-        
+    async checkIsValid(){
         await fetch(`https://wordle-creator-tools.p.rapidapi.com/check-word?word=${this.toString()}`, options)
             .then(response => response.json())
             .then(response => {
                 if(response.result === true){
                     console.log("The word entered was valid");
                     this.isValid = true;
-
-                    let currAttemptRow = document.getElementById("attempt_" + attempts);
-                    currAttemptRow.innerHTML = this.display();
-
                 }else{
                     // inform user that entry is not valid word
                     console.log("The word entered was not valid");
@@ -71,6 +68,9 @@ class Word{
 
 class Game{
     attempts = 1;
+    randomWord = "";
+    usedLetters =[]
+    isGameOver = false;
 
     constructor(){}
 
@@ -114,6 +114,19 @@ class Game{
         }); 
     }
 
+    generateRandomWord(){        
+        fetch('https://wordle-creator-tools.p.rapidapi.com/new-word?wordlength=5', options)
+            .then(response => response.json())
+            .then(response => {
+                console.log("Random generated word: " + response.word)
+                // may want to check its empty
+                let input = convertStringToLetterArray(response.word.split(''));
+                let answer = new Word(input);
+                this.randomWord = answer;
+            })
+            .catch(err => console.error(err));
+    }
+
     submitGuess(input){
         if(input.value.length < 5){
             // inform user that they need to enter text with more than 5 characters
@@ -126,9 +139,13 @@ class Game{
             let guess = convertStringToLetterArray(input.value.split(''));
             let guessWordObj = new Word(guess);
     
-            guessWordObj.checkIsValid(this.attempts)
+            guessWordObj.checkIsValid()
             .then(()=>{
                     if(guessWordObj.isValid == true){
+                        //compare words
+                        this.compareWords(guessWordObj, this.randomWord);
+                        let currAttemptRow = document.getElementById("attempt_" + this.attempts);
+                        currAttemptRow.innerHTML = guessWordObj.display();
                         this.attempts++;
                     }
                 }
@@ -136,44 +153,37 @@ class Game{
             .catch(err => console.log(err));
         }
     }
+
+    compareWords(guess, answer){
+
+        let guessArray = guess.letters;
+        let answerArray = answer.letters;
+
+        if(guess.toString() == answer.toString()){
+            console.log("horray you solved the wordle!");
+            // end game
+            this.isGameOver = true;
+
+            // set all letters to greeen
+            guess.letters.forEach((letter) => letter.status = "match");
+            
+            // display winning message!
+
+        }else{
+            // check each letter status
+            for(let i=0; i<5; i++){
+                if(guessArray[i].value != answerArray[i].value){
+                    let isLetterInAnswerWord = answer.toString().includes(guessArray[i].value);
+                    guessArray[i].status = (isLetterInAnswerWord) ? "wrongSpot" : "invalid";
+
+                }else{
+                    guessArray[i].status = "match";
+                }
+            }
+        }
+    }
 }
 
 function  convertStringToLetterArray(stringArray){
     return stringArray.map((item)=> new Letter(item));
-}
-
-function createGameBoard(){
-    const gameBoard = document.getElementById("game-board");
-
-    for(let i=0; i<6; i++){
-        // create word row div
-        let row = document.createElement("div");
-        row.setAttribute("class", "word");
-        row.setAttribute("id", i);
-
-        // create 5 "empty" letters per row
-        let letters = [];
-        for(let j=0; j<5; j++){
-            let placeHolderLetter = new Letter("");
-            letters.push(placeHolderLetter);
-        }
-
-        let word = new Word(letters);
-        row.innerHTML = word.display();
-        gameBoard.appendChild(row);
-    }
-
-    // create input box
-    let input = document.createElement("input");
-    input.setAttribute("id", "guess");
-    input.setAttribute("type", "text");
-    input.setAttribute("maxlength", "5");
-    gameBoard.appendChild(input);
-
-    // create submit btn
-    let submit = document.createElement("button");
-    submit.setAttribute("id", "submitBtn");
-    submit.innerHTML = "Submit";
-    gameBoard.appendChild(submit);
-
 }
