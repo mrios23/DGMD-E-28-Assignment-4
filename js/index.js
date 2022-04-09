@@ -137,15 +137,15 @@ class Game{
             console.log("You inputted: " + input.value);    // DEBUG
     
             let guess = convertStringToLetterArray(input.value.split(''));
-            let guessWordObj = new Word(guess);
+            let guessWord = new Word(guess);
     
-            guessWordObj.checkIsValid()
+            guessWord.checkIsValid()
             .then(()=>{
-                    if(guessWordObj.isValid == true){
+                    if(guessWord.isValid == true){
                         //compare words
-                        this.compareWords(guessWordObj, this.randomWord);
+                        this.compareWords(guessWord, this.randomWord);
                         let currAttemptRow = document.getElementById("attempt_" + this.attempts);
-                        currAttemptRow.innerHTML = guessWordObj.display();
+                        currAttemptRow.innerHTML = guessWord.display();
                         this.attempts++;
                     }
                 }
