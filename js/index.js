@@ -72,10 +72,15 @@ class Game{
     usedLetters =[]
     isGameOver = false;
 
+    letterTrash = document.getElementById("used-letters");
+
     constructor(){}
 
     createGameBoard(){
         const gameBoard = document.getElementById("game-board");
+
+        const tiles = document.createElement("div");
+        tiles.setAttribute("id", "gameTiles");
     
         for(let i=0; i<6; i++){
             // create word row div
@@ -92,26 +97,33 @@ class Game{
     
             let word = new Word(letters);
             row.innerHTML = word.display();
-            gameBoard.appendChild(row);
+            tiles.appendChild(row);
         }
+        // add tiles to game board
+        gameBoard.appendChild(tiles);
+
+        const inputContainer = document.createElement("div");
+        inputContainer.setAttribute("id", "inputContainer");
     
         // create input box
         var input = document.createElement("input");
         input.setAttribute("id", "guess");
         input.setAttribute("type", "text");
         input.setAttribute("maxlength", "5");
-        gameBoard.appendChild(input);
+        inputContainer.appendChild(input);
     
         // create submit btn
         let submit = document.createElement("button");
         submit.setAttribute("id", "submitBtn");
         submit.innerHTML = "Submit";
-        gameBoard.appendChild(submit);
+        inputContainer.appendChild(submit);
 
         submit.addEventListener("click", () => {
             this.submitGuess(input);
             input.value = "";
         }); 
+
+        gameBoard.appendChild(inputContainer);
     }
 
     generateRandomWord(){        
@@ -144,8 +156,14 @@ class Game{
                     if(guessWord.isValid == true){
                         //compare words
                         this.compareWords(guessWord, this.randomWord);
+
+                        // display guess
                         let currAttemptRow = document.getElementById("attempt_" + this.attempts);
                         currAttemptRow.innerHTML = guessWord.display();
+
+                        this.letterTrash.innerHTML += this.usedLetters.toString();
+
+                        // attempt guess count
                         this.attempts++;
                     }
                 }
@@ -173,8 +191,14 @@ class Game{
             // check each letter status
             for(let i=0; i<5; i++){
                 if(guessArray[i].value != answerArray[i].value){
-                    let isLetterInAnswerWord = answer.toString().includes(guessArray[i].value);
-                    guessArray[i].status = (isLetterInAnswerWord) ? "wrongSpot" : "invalid";
+                    let currLetter = guessArray[i];
+
+                    let isLetterInAnswerWord = answer.toString().includes(currLetter.value);
+                    currLetter.status = (isLetterInAnswerWord) ? "wrongSpot" : "invalid";
+
+                    if(!isLetterInAnswerWord){
+                        this.usedLetters.push(currLetter.value);
+                    }
 
                 }else{
                     guessArray[i].status = "match";

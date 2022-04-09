@@ -60,7 +60,7 @@
 
 #game-mode{
     padding-top: 20px;
-    display: flex;
+    /* display: flex; */
 }
 
 input {
@@ -97,8 +97,10 @@ body{
         max-width: 400px;
         width: 100%
     */
-    width:max-content;
-    margin: 0 auto;
+    /* width:max-content; */
+    width: 400px;
+    margin: 0 auto !important;
+    text-align: center;
 }
 
 
@@ -169,9 +171,16 @@ input:checked + .slider:before {
     padding-left: 15px;
 }
 
-/* Need to figure out how to get each row on its own line */
-
 #game-mode{
     display: inline-flex;
+    padding-top: 20px;
 }
 
+#gameTiles, #inputContainer{
+    padding-left: 25%;
+}
+
+#used-letters{
+    padding-top: 30px;
+    flex-wrap: wrap;
+}
