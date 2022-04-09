@@ -29,6 +29,13 @@
     }
 }
 
+#msg{
+    font-size: larger;
+    font-family: sans-serif;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
 .letterBox{
     border: 2px solid grey;
     height: 20px;

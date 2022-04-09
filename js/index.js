@@ -6,6 +6,15 @@ window.onload = () =>{
 
 }
 
+/* API KEY */
+const options = {
+    method: 'GET',
+    headers: {
+        'X-RapidAPI-Host': 'wordle-creator-tools.p.rapidapi.com',
+        'X-RapidAPI-Key': 'c5c5487ec6mshfa9eea1774ea84fp1b6491jsn97d7ea39604c'
+    }
+};
+
 class Letter{
     value;
     status;
@@ -15,14 +24,6 @@ class Letter{
         this.display = () => `<div class="letterBox ${this.status}">${this.value}</div>`;
     }
 }
-/* API KEY */
-const options = {
-    method: 'GET',
-    headers: {
-        'X-RapidAPI-Host': 'wordle-creator-tools.p.rapidapi.com',
-        'X-RapidAPI-Key': 'c5c5487ec6mshfa9eea1774ea84fp1b6491jsn97d7ea39604c'
-    }
-};
 
 class Word{
     letters = [];
@@ -54,11 +55,15 @@ class Word{
         await fetch(`https://wordle-creator-tools.p.rapidapi.com/check-word?word=${this.toString()}`, options)
             .then(response => response.json())
             .then(response => {
+                let msg = document.getElementById("msg");
+                
                 if(response.result === true){
+                    msg.innerHTML = "";
                     console.log("The word entered was valid");
                     this.isValid = true;
                 }else{
                     // inform user that entry is not valid word
+                    msg.innerHTML = "The word entered was not valid!";
                     console.log("The word entered was not valid");
                 }
             })
@@ -143,6 +148,7 @@ class Game{
         if(input.value.length < 5){
             // inform user that they need to enter text with more than 5 characters
             console.log("Need at least 5 letters for each attempt");
+            document.getElementById("msg").innerHTML = "Word needs to have 5 letters"
             return false;
     
         }else{
