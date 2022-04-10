@@ -1,11 +1,3 @@
-window.onload = () =>{
-
-    var game = new Game();
-    game.generateRandomWord();
-    game.createGameBoard();
-
-}
-
 /* API KEY */
 const options = {
     method: 'GET',
@@ -14,7 +6,23 @@ const options = {
         'X-RapidAPI-Key': 'c5c5487ec6mshfa9eea1774ea84fp1b6491jsn97d7ea39604c'
     }
 };
+/* GLOBAL VARIABLE */
+const msg = document.getElementById("msg");
+const restartBtn = document.getElementById("restartBtn");
+const gameBoard = document.getElementById("game-board");
+const debug = document.getElementById("debugSwitch");
 
+window.onload = () =>{
+    ;
+
+    if(restartBtn.style.visibility = "hidden") playWorlde();
+    restartBtn.addEventListener("click", ()=> {
+        clearPreviousGame();
+        playWorlde();
+    });
+}
+
+/* CLASSES */
 class Letter{
     value;
     status;
@@ -55,16 +63,12 @@ class Word{
         await fetch(`https://wordle-creator-tools.p.rapidapi.com/check-word?word=${this.toString()}`, options)
             .then(response => response.json())
             .then(response => {
-                let msg = document.getElementById("msg");
-                
                 if(response.result === true){
                     msg.innerHTML = "";
-                    console.log("The word entered was valid");
                     this.isValid = true;
                 }else{
                     // inform user that entry is not valid word
                     msg.innerHTML = "The word entered was not valid!";
-                    console.log("The word entered was not valid");
                 }
             })
             .catch(err => console.error(err));        
@@ -76,14 +80,11 @@ class Game{
     randomWord = "";
     usedLetters =[]
     isGameOver = false;
-
-    letterTrash = document.getElementById("used-letters");
+    debugMode = false;
 
     constructor(){}
 
     createGameBoard(){
-        const gameBoard = document.getElementById("game-board");
-
         const tiles = document.createElement("div");
         tiles.setAttribute("id", "gameTiles");
     
@@ -107,6 +108,7 @@ class Game{
         // add tiles to game board
         gameBoard.appendChild(tiles);
 
+        // create input conatiner
         const inputContainer = document.createElement("div");
         inputContainer.setAttribute("id", "inputContainer");
     
@@ -121,14 +123,40 @@ class Game{
         let submit = document.createElement("button");
         submit.setAttribute("id", "submitBtn");
         submit.innerHTML = "Submit";
+        submit.addEventListener("click", () => {
+            (input.value.length < 5) ? 
+                msg.innerHTML = "Word needs to have 5 letters" :
+                this.submitGuess(input);
+
+            input.value = "";
+        });
         inputContainer.appendChild(submit);
 
-        submit.addEventListener("click", () => {
-            this.submitGuess(input);
-            input.value = "";
-        }); 
-
         gameBoard.appendChild(inputContainer);
+
+        // create used letters div
+        let usedLetters = document.createElement("div");
+        usedLetters.setAttribute("id", "used-letters");
+        gameBoard.appendChild(usedLetters);
+
+        // hide restart button
+        restartBtn.style.visibility = "hidden";
+
+        //add instructions msg
+        msg.innerHTML = "<h2>Welcome to Wordle!</h2><div id='instructions'><p>Green = letter is in correct spot. </p><p>Yellow = letter is in the wrong spot. </p><p>Grey = letter is not in the word</p></div>"
+    }
+
+    play(){
+       if(this.isGameOver == true || this.attempts > 6){
+           // display restart button
+           let restart = document.getElementById("restartBtn");
+           restart.style.visibility = "visible";
+           
+           // display corresponding message
+           msg.innerHTML = (this.isGameOver) ? 
+            "Hooray! You solved the wordle! Press Restart to play again!" :
+            "Game Over! Ran out of attempts";
+        }
     }
 
     generateRandomWord(){        
@@ -140,42 +168,42 @@ class Game{
                 let input = convertStringToLetterArray(response.word.split(''));
                 let answer = new Word(input);
                 this.randomWord = answer;
+
+                // Set up debugger
+                let debugElement = document.getElementById("game-mode");
+                let debugWord = document.createElement("p");
+                debugWord.setAttribute("id", "debugAnswerWord");
+                debugWord.innerHTML = `: ${response.word}`;
+                debugElement.appendChild(debugWord);
             })
             .catch(err => console.error(err));
     }
 
     submitGuess(input){
-        if(input.value.length < 5){
-            // inform user that they need to enter text with more than 5 characters
-            console.log("Need at least 5 letters for each attempt");
-            document.getElementById("msg").innerHTML = "Word needs to have 5 letters"
-            return false;
+        console.log("You inputted: " + input.value);    // DEBUG
+        let guess = convertStringToLetterArray(input.value.split(''));
+        let guessWord = new Word(guess);
     
-        }else{
-            console.log("You inputted: " + input.value);    // DEBUG
-    
-            let guess = convertStringToLetterArray(input.value.split(''));
-            let guessWord = new Word(guess);
-    
-            guessWord.checkIsValid()
-            .then(()=>{
-                    if(guessWord.isValid == true){
-                        //compare words
-                        this.compareWords(guessWord, this.randomWord);
+        guessWord.checkIsValid()
+        .then(()=>{
+            if(guessWord.isValid == true){
+                //compare words
+                this.compareWords(guessWord, this.randomWord);
 
-                        // display guess
-                        let currAttemptRow = document.getElementById("attempt_" + this.attempts);
-                        currAttemptRow.innerHTML = guessWord.display();
+                // display guess
+                let currAttemptRow = document.getElementById("attempt_" + this.attempts);
+                currAttemptRow.innerHTML = guessWord.display();
 
-                        this.letterTrash.innerHTML += this.usedLetters.toString();
+                document.getElementById("used-letters").innerHTML = `Used Letters: ${this.usedLetters.toString()}`
 
-                        // attempt guess count
-                        this.attempts++;
-                    }
-                }
-            )
-            .catch(err => console.log(err));
-        }
+                // attempt guess count
+                this.attempts++;
+                
+                // return if game is over
+                this.play();
+            }
+        })
+        .catch(err => console.log(err));
     }
 
     compareWords(guess, answer){
@@ -184,34 +212,50 @@ class Game{
         let answerArray = answer.letters;
 
         if(guess.toString() == answer.toString()){
-            console.log("horray you solved the wordle!");
-            // end game
-            this.isGameOver = true;
-
             // set all letters to greeen
             guess.letters.forEach((letter) => letter.status = "match");
-            
-            // display winning message!
+
+            // end game
+            this.isGameOver = true;
 
         }else{
             // check each letter status
             for(let i=0; i<5; i++){
                 if(guessArray[i].value != answerArray[i].value){
                     let currLetter = guessArray[i];
-
                     let isLetterInAnswerWord = answer.toString().includes(currLetter.value);
+                    
                     currLetter.status = (isLetterInAnswerWord) ? "wrongSpot" : "invalid";
 
-                    if(!isLetterInAnswerWord){
+                    if(!isLetterInAnswerWord && !this.usedLetters.includes(currLetter.value)){
                         this.usedLetters.push(currLetter.value);
                     }
-
                 }else{
                     guessArray[i].status = "match";
                 }
             }
         }
     }
+
+    debug(){
+        this.debugSwitch = !this.debugSwitch
+        document.getElementById("debugAnswerWord").style.visibility = (this.debugSwitch) ? "visible" : "hidden";
+    }
+}
+
+/* UTILITY FUNCTIONS */
+function playWorlde(){
+    var game = new Game();
+    game.generateRandomWord();
+    game.createGameBoard();
+    game.play();
+
+    debug.addEventListener("click", game.debug)
+}
+
+function clearPreviousGame(){
+    gameBoard.innerHTML = "";
+    msg.innerHTML = ""
 }
 
 function  convertStringToLetterArray(stringArray){
