@@ -142,7 +142,7 @@ class Game{
         restartBtn.style.visibility = "hidden";
 
         //add instructions msg
-        msg.innerHTML = "<h2>Welcome to Wordle!</h2><p>Guess the random word by entering 5 letter word in the text box below. Click submit to see how your answer matches up! Get the correct word in 6 tries or game over!</p><div id='instructions'><p>Green = letter is incorrect spot. </p><p>Yellow = letter is in the wrong spot. </p><p>Grey = letter is not in the word.</p></div>"
+        msg.innerHTML = "<h2>Welcome to Wordle!</h2><p>Guess the random word by entering 5 letter word in the text box below. Click submit to see how your answer matches up! Get the correct word in 6 tries or game over!</p><div id='instructions'><p>Green = letter is in the correct spot. </p><p>Yellow = letter is in the wrong spot. </p><p>Grey = letter is not in the word.</p></div>"
     }
 
     play(){
