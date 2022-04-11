@@ -6,15 +6,14 @@ const options = {
         'X-RapidAPI-Key': 'c5c5487ec6mshfa9eea1774ea84fp1b6491jsn97d7ea39604c'
     }
 };
-/* GLOBAL VARIABLE */
+/* GLOBAL VARIABLES */
 const msg = document.getElementById("msg");
 const restartBtn = document.getElementById("restartBtn");
 const gameBoard = document.getElementById("game-board");
-const debug = document.getElementById("debugSwitch");
+const gameMode = document.getElementById("game-mode");
+const debugSwitch = document.getElementById("debugSwitch");
 
 window.onload = () =>{
-    ;
-
     if(restartBtn.style.visibility = "hidden") playWorlde();
     restartBtn.addEventListener("click", ()=> {
         clearPreviousGame();
@@ -162,25 +161,21 @@ class Game{
     generateRandomWord(){        
         fetch('https://wordle-creator-tools.p.rapidapi.com/new-word?wordlength=5', options)
             .then(response => response.json())
-            .then(response => {
-                console.log("Random generated word: " + response.word)
-                // may want to check its empty
+            .then(response => {                
                 let input = convertStringToLetterArray(response.word.split(''));
                 let answer = new Word(input);
                 this.randomWord = answer;
 
                 // Set up debugger
-                let debugElement = document.getElementById("game-mode");
                 let debugWord = document.createElement("p");
                 debugWord.setAttribute("id", "debugAnswerWord");
                 debugWord.innerHTML = `: ${response.word}`;
-                debugElement.appendChild(debugWord);
+                gameMode.appendChild(debugWord);
             })
             .catch(err => console.error(err));
     }
 
     submitGuess(input){
-        console.log("You inputted: " + input.value);    // DEBUG
         let guess = convertStringToLetterArray(input.value.split(''));
         let guessWord = new Word(guess);
     
@@ -250,12 +245,13 @@ function playWorlde(){
     game.createGameBoard();
     game.play();
 
-    debug.addEventListener("click", game.debug)
+    debugSwitch.addEventListener("click", game.debug)
 }
 
 function clearPreviousGame(){
     gameBoard.innerHTML = "";
     msg.innerHTML = ""
+    gameMode.removeChild(gameMode.lastChild);
 }
 
 function  convertStringToLetterArray(stringArray){
